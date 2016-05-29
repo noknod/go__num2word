@@ -4,6 +4,69 @@ package num2word
 import  ( "fmt" ; "strconv" )
 
 
+var (
+    hundreds map[byte]string
+    tens map[string]string
+    ones map[string]string
+)
+
+func init() {
+    hundreds = map[byte]string{
+        '0': "", '1': "сто", '2': "двести", '3':  "триста", '4':  "четыреста",
+        '5':  "пятьсот", '6':  "шестьсот", '7':  "семьсот", '8':  "восемьсот",
+        '9':  "девятьсот",
+    }
+    tens = map[string]string{
+        "0_": "", "10": "десять", "11": "одинадцать", "12": "двенадцать",
+        "13": "тринадцать", "14": "четырнадцать", "15": "пятнадцать", 
+        "16": "шестнадцать", "17": "семнадцать", "18":"восемнадцать",
+        "19": "девятнадцать", "2_": "двадцать", "3_": "тридцать", 
+        "4_": "сорок", "5_": "пятьдесят", "6_": "шестьдесят", 
+        "7_": "семьдесят", "8_": "восемьдесят", "9_": "девяносто",
+    }
+    ones = map[string]string{
+        "0": "", "1F": "одна", "1M": "один", "2F": "две", "2M": "два", 
+        "3": "три", "4": "четыре", "5": "пять", "6": "шесть", "7": "семь", 
+        "8": "восемь", "9": "девять",
+    }
+}
+
+
+type TripletInfoHolder interface {
+    GetNounGender() byte
+    GetCommonWord() string
+    GetWordFor1() string
+    GetWordFor234() string
+}
+
+
+type TripletInfo struct {
+    NounGender byte
+    CommonWord string
+    WordFor1 string
+    WordFor234 string
+}
+func (i *TripletInfo) GetNounGender() byte {
+    return i.NounGender
+}
+func (i *TripletInfo) GetCommonWord() string {
+    return i.CommonWord
+}
+func (i *TripletInfo) GetWordFor1() string {
+    return i.WordFor1
+}
+func (i *TripletInfo) GetWordFor234() string {
+    return i.WordFor234
+}
+
+type TripletInfoList struct {
+    Info []TripletInfo
+}
+func (i *TripletInfoList) Get(index int) TripletInfoHolder {
+    return &i.Info[index]
+}
+
+
 func SplitToTriplets(sNumber *string, maxTripletCnt *int) (out []string) {
     var (
         length = len(*sNumber)
@@ -29,5 +92,91 @@ func SplitToTriplets(sNumber *string, maxTripletCnt *int) (out []string) {
     for i := len(dummy) - 1; i >= 0 ; i-- {
         out = append(out, dummy[i])
     }
+    return
+}
+
+
+func TripletToWord(triplet string, tripletInfo TripletInfoHolder) (out string, ok bool) {
+    var (
+        words []string = make([]string, 0)
+        word string
+        suffix string = "common"
+    )
+
+    if word, ok = hundreds[triplet[0]]; ok {
+        if word != "" {
+           words = append(words, word)
+       }
+    } else {
+        return out, false
+    }
+
+    if triplet[1] == '1' {
+        if word, ok = tens[triplet[1:3]]; ok {
+            if word != "" {
+                words = append(words, word)
+            }
+        } else {
+            return out, false
+        }
+
+    } else {
+        if word, ok = tens[string(triplet[1]) + "_"]; ok {
+            if word != "" {
+                words = append(words, word)
+            }
+        } else {
+            return out, false
+        }
+
+        if triplet[2] == '1' {
+            if word, ok = ones["1" + string(tripletInfo.GetNounGender())]; ok {
+                if word != "" {
+                    words = append(words, word)
+                }
+            } else {
+                return out, false
+            }
+            suffix = "1word"
+        } else if triplet[2] == '2' {
+            if word, ok = ones["2" + string(tripletInfo.GetNounGender())]; ok {
+                if word != "" {
+                    words = append(words, word)
+                }
+            } else {
+                return out, false
+            }
+            suffix = "234word"
+        } else {
+            if word, ok = ones[string(triplet[2])]; ok {
+                if word != "" {
+                    words = append(words, word)
+                }
+            } else {
+                return out, false
+            }
+        }
+    }
+
+    for _, word = range words {
+        out += word + " "
+    }
+    if out != "" {
+        out = out[:len(out) - 1]
+        if suffix == "common" {
+            suffix = tripletInfo.GetCommonWord()
+        } else if suffix == "1word" {
+            suffix = tripletInfo.GetWordFor1()
+        } else if suffix == "234word" {
+            suffix = tripletInfo.GetWordFor234()
+        } else {
+            return out, false
+        }
+        if suffix != "" {
+            out += " " + suffix
+        }
+    }
+
+    ok = true
     return
 }

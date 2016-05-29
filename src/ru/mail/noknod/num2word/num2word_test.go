@@ -57,7 +57,7 @@ func TestSplitToTriplets(t *testing.T) {
     }
 
     for _, v := range testSet {
-        fmt.Println(v.sNumber, v.maxTripletsCnt, v.triplets[0])
+        //fmt.Println(v.sNumber, v.maxTripletsCnt, v.triplets[0])
         triplets = SplitToTriplets(&v.sNumber, &v.maxTripletsCnt)
         if !reflect.DeepEqual(triplets, v.triplets) {
             t.Errorf("Split for %s and %d:\nexpected %v, got %v", 
@@ -87,4 +87,64 @@ func TestSplitToTripletsNillMaxCntArgument(t *testing.T) {
     }()
     var sNumber = "2"
     _ = SplitToTriplets(&sNumber, nil)
+}
+
+
+func TestTripletToWord(t *testing.T) {
+    var tripletInfo TripletInfoList = TripletInfoList{
+        Info: []TripletInfo{
+            TripletInfo{
+                NounGender: 'M',
+                CommonWord: "",
+                WordFor1: "",
+                WordFor234: "",
+            },
+            TripletInfo{
+                NounGender: 'F',
+                CommonWord: "тысяч",
+                WordFor1: "тысяча",
+                WordFor234: "тысячи",
+            },
+            TripletInfo{
+                NounGender: 'M',
+                CommonWord: "миллионов",
+                WordFor1: "миллион",
+                WordFor234: "миллиона",
+            },
+        },
+    }
+    
+    testSet := []struct {
+        triplet string
+        tripletInfo TripletInfoHolder
+        word string // предполагамый результат
+    }{
+        {"000", tripletInfo.Get(0), ""},
+        {"000", tripletInfo.Get(2), ""},
+        {"001", tripletInfo.Get(0), "один"},
+        {"001", tripletInfo.Get(1), "одна тысяча"},
+        {"002", tripletInfo.Get(1), "две тысячи"},
+        {"020", tripletInfo.Get(0), "двадцать"},
+        {"010", tripletInfo.Get(1), "десять тысяч"},    
+        {"022", tripletInfo.Get(2), "двадцать два миллиона"},
+        {"500", tripletInfo.Get(0), "пятьсот"},
+        {"700", tripletInfo.Get(2), "семьсот миллионов"},
+        {"201", tripletInfo.Get(0), "двести один"},
+        {"301", tripletInfo.Get(1), "триста одна тысяча"},
+        {"402", tripletInfo.Get(1), "четыреста две тысячи"},
+        {"135", tripletInfo.Get(0), "сто тридцать пять"},
+        {"135", tripletInfo.Get(1), "сто тридцать пять тысяч"},
+    }
+
+    var (
+        word string
+        ok bool
+    )
+    for _, v := range testSet {
+        word, ok = TripletToWord(v.triplet, v.tripletInfo)
+        if !ok || !(v.word == word) {
+            t.Errorf("Word for <%s> and <%s>: expected <%v>, got <%v>", 
+                v.triplet, v.tripletInfo.GetCommonWord(), v.word, word)
+        }
+    }
 }
