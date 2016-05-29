@@ -57,7 +57,6 @@ func TestSplitToTriplets(t *testing.T) {
     }
 
     for _, v := range testSet {
-        //fmt.Println(v.sNumber, v.maxTripletsCnt, v.triplets[0])
         triplets = SplitToTriplets(&v.sNumber, &v.maxTripletsCnt)
         if !reflect.DeepEqual(triplets, v.triplets) {
             t.Errorf("Split for %s and %d:\nexpected %v, got %v", 
@@ -70,10 +69,7 @@ func TestSplitToTripletsNillNumberArgument(t *testing.T) {
     defer func() {
         if r := recover(); !checkIsNillArgumentError(&r) {
             t.Errorf(nillArgumentMsg)
-        }/* else {
-            var s string = fmt.Errorf("%v", r).Error()
-            fmt.Println("\t__", reflect.TypeOf(r), "\n\t", r, "\n\t==" + s + "\n")
-        }*/
+        }
     }()
     var maxTripletsCnt = 2
     _ = SplitToTriplets(nil, &maxTripletsCnt)
@@ -147,4 +143,36 @@ func TestTripletToWord(t *testing.T) {
                 v.triplet, v.tripletInfo.GetCommonWord(), v.word, word)
         }
     }
+}
+
+
+func TestNumToWord(t *testing.T) {
+    testSet := []struct {
+        number int
+        word string // предполагамый результат
+    }{
+        {0, "ноль"},
+        {1, "один"},
+        {-1, "минус один"},
+        {1000, "одна тысяча"},
+        {-2000, "минус две тысячи"},
+        {20, "двадцать"},
+        {10000, "десять тысяч"},    
+        {22000000, "двадцать два миллиона"},
+        {542, "пятьсот сорок два"},
+        {-201145, "минус двести одна тысяча сто сорок пять"},
+        {135001075, "сто тридцать пять миллионов одна тысяча семьдесят пять"},
+        {135001, "сто тридцать пять тысяч один"},
+    }
+
+    var word string
+
+    for _, v := range testSet {
+        word = NumToWord(v.number)
+        if !(v.word == word) {
+            t.Errorf("Word for <%d>: expected <%v>, got <%v>", 
+                v.number, v.word, word)
+        }
+    }
+
 }

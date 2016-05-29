@@ -8,6 +8,8 @@ var (
     hundreds map[byte]string
     tens map[string]string
     ones map[string]string
+    tripletInfo TripletInfoList
+    maxTripletCnt int
 )
 
 func init() {
@@ -29,6 +31,29 @@ func init() {
         "3": "три", "4": "четыре", "5": "пять", "6": "шесть", "7": "семь", 
         "8": "восемь", "9": "девять",
     }
+    tripletInfo = TripletInfoList{
+        Info: []TripletInfo{
+            TripletInfo{
+                NounGender: 'M',
+                CommonWord: "",
+                WordFor1: "",
+                WordFor234: "",
+            },
+            TripletInfo{
+                NounGender: 'F',
+                CommonWord: "тысяч",
+                WordFor1: "тысяча",
+                WordFor234: "тысячи",
+            },
+            TripletInfo{
+                NounGender: 'M',
+                CommonWord: "миллионов",
+                WordFor1: "миллион",
+                WordFor234: "миллиона",
+            },
+        },
+    }
+    maxTripletCnt = len(tripletInfo.Info)
 }
 
 
@@ -179,4 +204,39 @@ func TripletToWord(triplet string, tripletInfo TripletInfoHolder) (out string, o
 
     ok = true
     return
+}
+
+
+func NumToWord(number int) string {
+    var (
+        sNumber string
+        prefix string
+        triplets []string
+        word string
+        ok bool
+        out string
+    )
+
+    if number == 0 {
+        return "ноль"
+    } else if number < 0 {
+        prefix = "минус "
+        number *= -1
+    } else {
+        prefix = ""
+    }
+    sNumber = strconv.Itoa(number)
+    triplets = SplitToTriplets(&sNumber, &maxTripletCnt)
+
+    for i, triplet := range triplets {
+        word, ok = TripletToWord(triplet, tripletInfo.Get(i))
+        if !ok {
+            return ""
+        }
+        if word != "" {
+            out = word + " " + out
+        }
+    }
+    out = out[:len(out) - 1]
+    return prefix + out
 }
